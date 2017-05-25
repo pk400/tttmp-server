@@ -5,36 +5,38 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <iostream>
 
-void error(char *msg) {
-    perror(msg);
+void error(const char *msg) {
+    std::cerr << msg << std::endl;
     exit(1);
 }
 
 int main(int argc, char* argv[]) {
-    int sockfd, newsockfd, portno, clilen;
+    if(argc < 2) error("ERROR, no port provided"); 
+
+    // File descriptors
+    int sockfd, newsockfd, portno;
+    socklen_t clilen;
     char buffer[256];
-    struct sockaddr_in serv_addr, cli_addr;
+    // Contains internet address information
+    struct sockaddr_in server_address, client_address;
     int n;
-    if(argc < 2) {
-	fprintf(stderr, "ERROR, no port provided\n");
-	exit(1);
-    }
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if(sockfd < 0)
 	error("ERROR opening socket");
-    bzero((char *) &serv_addr, sizeof(serv_addr));
+    bzero((char *) &server_address, sizeof(server_address));
     portno = atoi(argv[1]);
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(portno);
-    if (bind(sockfd, (struct sockaddr *) &serv_addr,
-		sizeof(serv_addr)) < 0) 
+    server_address.sin_family = AF_INET;
+    server_address.sin_addr.s_addr = INADDR_ANY;
+    server_address.sin_port = htons(portno);
+    if (bind(sockfd, (struct sockaddr *) &server_address,
+		sizeof(server_address)) < 0) 
 	error("ERROR on binding");
     listen(sockfd,5);
-    clilen = sizeof(cli_addr);
-    newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+    clilen = sizeof(client_address);
+    newsockfd = accept(sockfd, (struct sockaddr *) &client_address, &clilen);
     if (newsockfd < 0) 
 	error("ERROR on accept");
     bzero(buffer,256);
